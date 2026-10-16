@@ -67,6 +67,7 @@ export {
   AgentResponseError,
   RPCRetryExhaustedError,
   RPCTimeoutError,
+  RPCAbortedError,
   RetentionExceededError,
   NameNotFoundError,
   NameAlreadyRegisteredError,
