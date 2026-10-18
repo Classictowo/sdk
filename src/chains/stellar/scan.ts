@@ -2,7 +2,7 @@ import { ed25519 } from '@noble/curves/ed25519';
 import type { ExtPointType } from '@noble/curves/abstract/edwards';
 import { computeAnnouncementViewTag, computeSharedSecret, computeViewTag } from './stealth';
 import { hashToScalar, deriveStealthPubKey, pubKeyToStellarAddress, L } from './scalar';
-import { SCHEME_ID, SCHEME_ID_V2 } from './constants';
+import { SCHEME_ID_V1, SCHEME_ID_V2 } from './constants';
 import type { Announcement, MatchedAnnouncement } from './types';
 import { encodeStealthMetaAddress, decodeStealthMetaAddress } from './meta-address';
 import { hexToBytes } from './utils';
@@ -115,7 +115,7 @@ export async function* scanAnnouncementsStream(
   try {
     for await (const ann of piped) {
       scanned++;
-      if (ann.schemeId !== SCHEME_ID && ann.schemeId !== SCHEME_ID_V2) continue;
+      if (ann.schemeId !== SCHEME_ID_V1 && ann.schemeId !== SCHEME_ID_V2) continue;
 
       const metadataBytes = hexToBytes(ann.metadata);
       if (metadataBytes.length === 0) continue;
@@ -235,7 +235,7 @@ export async function* scanAnnouncementsStreamSequential(
       if (batch.length === 0) break;
 
       for (const ann of batch) {
-        if (ann.schemeId !== SCHEME_ID && ann.schemeId !== SCHEME_ID_V2) continue;
+        if (ann.schemeId !== SCHEME_ID_V1 && ann.schemeId !== SCHEME_ID_V2) continue;
 
         const viewTag = readViewTag(ann.metadata);
         if (viewTag === null) continue;
@@ -426,7 +426,7 @@ export function scanAnnouncements(
 
   for (let i = 0, len = announcements.length; i < len; i++) {
     const ann = announcements[i];
-    if (ann.schemeId !== SCHEME_ID && ann.schemeId !== SCHEME_ID_V2) continue;
+    if (ann.schemeId !== SCHEME_ID_V1 && ann.schemeId !== SCHEME_ID_V2) continue;
 
     const viewTag = readViewTag(ann.metadata);
     if (viewTag === null) continue;
@@ -466,9 +466,14 @@ export function scanAnnouncements(
 /**
  * Pre-optimization scanner retained for benchmarks and migration analysis.
  *
- * This matches the old Stellar path: every same-scheme announcement pays for
- * X25519 first, computes the legacy shared-secret tag second, and only then
- * compares the announced stealth address.
+ * This matches the old Stellar path: every v1 announcement pays for X25519
+ * first, computes the legacy shared-secret tag second, and only then compares
+ * the announced stealth address.
+ *
+ * It reads {@link SCHEME_ID_V1} announcements only. Scheme 2 announcements carry
+ * the public view tag from {@link computeAnnouncementViewTag}, which this path
+ * never computes, so it skips them; scan those with {@link scanAnnouncements}
+ * or {@link scanAnnouncementsStream}.
  */
 export function scanAnnouncementsLegacySharedSecretTag(
   announcements: Announcement[],
@@ -479,7 +484,7 @@ export function scanAnnouncementsLegacySharedSecretTag(
   const matched: MatchedAnnouncement[] = [];
 
   for (const ann of announcements) {
-    if (ann.schemeId !== SCHEME_ID) continue;
+    if (ann.schemeId !== SCHEME_ID_V1) continue;
 
     const metadataBytes = hexToBytes(ann.metadata);
     if (metadataBytes.length === 0) continue;
