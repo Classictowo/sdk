@@ -1,6 +1,17 @@
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+
+// The framework packages import the agent client from its workspace package.
+// Point that specifier at the source so the root suite does not need a build
+// of `packages/sdk-agent` first.
+const sdkAgentSrc = fileURLToPath(new URL('./packages/sdk-agent/src', import.meta.url));
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@wraith-protocol/sdk-agent': sdkAgentSrc,
+    },
+  },
   test: {
     globals: true,
     typecheck: {
@@ -20,7 +31,7 @@ export default defineConfig({
       'test/chains/evm/vectors.test.ts',
       'test/chains/solana/vectors.test.ts',
     ],
-    testTimeout: 1200000, // 20 minutes for high-run nightly fuzz tests
+    testTimeout: 3600000, // 60 minutes for high-run nightly fuzz tests (100k runs takes ~6.5min + reporting overhead)
   },
   benchmark: {
     include: ['test/chains/**/bench/**/*.bench.ts', 'test/bench/**/*.bench.ts'],

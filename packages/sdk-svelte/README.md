@@ -61,6 +61,28 @@ Reactive Wraith API client.
 {/if}
 ```
 
+### `useStellarName`
+
+Resolves a Stellar `.wraith` name through the core `resolveStellarName` helper against the configured Soroban `wraith-names` contract, with positive-only in-memory TTL caching (5 minutes by default), `AbortController` cancellation (`abort()` / `dispose()`), and typed `WraithError` instances (`InvalidNameError`, `InvalidMetaAddressError`, `WalletWrongNetworkError`, `RPCAbortedError`).
+
+```svelte
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { useStellarName } from '@wraith-protocol/sdk-svelte';
+
+  const { address, loading, error, resolve, abort } = useStellarName('alice.wraith', 'testnet');
+  onDestroy(() => abort());
+</script>
+
+{#if $loading}
+  <p>Resolving...</p>
+{:else if $error}
+  <p>Error: {$error.message}</p>
+{:else}
+  <p>Meta-address: {$address ?? 'Not registered'}</p>
+{/if}
+```
+
 ### `useEvmStealthKeys`
 
 ```svelte
@@ -86,6 +108,23 @@ Reactive Wraith API client.
   const addr = generateAddress(k.spendingPubKey, k.viewingPubKey);
 </script>
 ```
+
+### `useStellarAnnouncementScan`
+
+Scans Stellar announcements with cancellation. Pass a signal (for example from the component's `onDestroy`) and every in-flight scan is aborted when it fires.
+
+```ts
+import { onDestroy } from 'svelte';
+import { useStellarAnnouncementScan } from '@wraith-protocol/sdk-svelte';
+
+const controller = new AbortController();
+onDestroy(() => controller.abort());
+
+const scanner = useStellarAnnouncementScan({ signal: controller.signal });
+const announcements = await scanner.scan({ fromLedger: 100 });
+```
+
+`scan()` also accepts its own `signal`, aborts any scan already in flight, and never publishes a superseded result. `dispose()` aborts on demand.
 
 ### `useStealthMetaAddress`
 

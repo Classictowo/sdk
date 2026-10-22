@@ -14,6 +14,7 @@ export {
   SCHEME_ID,
   SCHEME_ID_V1,
   SCHEME_ID_V2,
+  ACTIVE_SCHEME_ID,
   ANNOUNCE_EVENT_SYMBOL,
   VIEW_TAG_BUCKET_COUNT,
   META_ADDRESS_PREFIX,
@@ -159,3 +160,14 @@ export type {
 export { createRpcClient } from './rpc';
 export type { RpcClient, RpcClientConfig, RpcEndpoint, RpcRequestOptions } from './rpc';
 export type { RequestTimeouts } from './timeouts';
+export type { HorizonCallOptions } from './request';
+
+export {
+  DEFAULT_STELLAR_NAME_TTL_MS,
+  normalizeStellarName,
+  resolveStellarName,
+  clearStellarNameCache,
+  getStellarNameDefaultTtl,
+  setStellarNameDefaultTtl,
+} from './names';
+export type { ResolveStellarNameOptions } from './names';

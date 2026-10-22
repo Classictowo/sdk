@@ -282,6 +282,30 @@ export class HorizonResponseError extends WraithNetworkError {
   }
 }
 
+/**
+ * Thrown when the Wraith Agent API returns a 2xx response whose JSON payload or tool-call output
+ * is malformed or does not match the expected schema.
+ */
+export class AgentResponseError extends WraithNetworkError {
+  readonly code = 'WRAITH/NETWORK/AGENT_RESPONSE';
+  /** Location of the rejected value in the response, e.g. `balance` or `toolCalls[0].detail[0].stealthAddress`. */
+  readonly field: string;
+
+  constructor(url: string, field: string, reason: string) {
+    super(`Invalid agent response from "${url}" at ${field}: ${reason}`, { url, field, reason });
+    this.field = field;
+  }
+
+  describe(): string {
+    const { url, field } = this.context ?? {};
+    return (
+      `Agent endpoint "${url}" returned a response that failed validation at ${field}. ` +
+      `Try: verify that baseUrl points to a compatible Wraith Agent API server and that the ` +
+      `SDK version matches the server response schema. See ${this.docsLink}.`
+    );
+  }
+}
+
 export class RPCRetryExhaustedError extends WraithNetworkError {
   readonly code = 'WRAITH/NETWORK/RPC_RETRY_EXHAUSTED';
 
@@ -375,6 +399,40 @@ export class RPCTimeoutError extends WraithNetworkError implements RPCTimeoutDet
       `Attempt ${attempt} to "${endpoint}" got no ${missing} within ${timeoutMs}ms. Try: configure ` +
       `a fallback endpoint so the client can fail over, or raise ${option} if this endpoint is ` +
       `just slow. See ${this.docsLink}.`
+    );
+  }
+}
+
+/**
+ * Thrown when the caller's `AbortSignal` cancels a Horizon request before it completes. The
+ * signal's `reason` is kept on `cause`, so `error.cause` still tells an explicit
+ * `controller.abort(reason)` apart from a plain abort.
+ */
+export class RPCAbortedError extends WraithNetworkError {
+  readonly code = 'WRAITH/NETWORK/RPC_ABORTED';
+  readonly url: string;
+
+  /**
+   * @param options - `cause` is the abort signal's `reason`. Exposed as `error.cause` and left out
+   * of `toJSON()`.
+   */
+  constructor(url: string, options?: { cause?: unknown }) {
+    super(`RPC request to "${url}" was aborted by the caller`, { url });
+    this.url = url;
+    if (options?.cause !== undefined) {
+      Object.defineProperty(this, 'cause', {
+        value: options.cause,
+        writable: true,
+        configurable: true,
+      });
+    }
+  }
+
+  describe(): string {
+    const { url } = this.context ?? {};
+    return (
+      `The request to "${url}" was cancelled through its AbortSignal before it finished. Try: ` +
+      `nothing, if the abort was intended; otherwise check what aborted the signal. See ${this.docsLink}.`
     );
   }
 }

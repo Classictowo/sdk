@@ -11,10 +11,15 @@ export enum Chain {
 export interface WraithConfig {
   apiKey: string;
   baseUrl?: string;
+  timeoutMs?: number;
   ai?: {
     provider: 'gemini' | 'openai' | 'claude';
     apiKey: string;
   };
+}
+
+export interface RequestOptions {
+  signal?: AbortSignal;
 }
 
 export interface AgentConfig {
@@ -47,6 +52,11 @@ export interface ToolCall {
 
 export interface Balance {
   native: string;
+  tokens: Record<string, string>;
+}
+
+export interface AgentStatus {
+  balance: string;
   tokens: Record<string, string>;
 }
 

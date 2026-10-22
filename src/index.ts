@@ -41,6 +41,7 @@ export type {
   ScanAllInput,
   MatchedAnnouncement,
   SupportedChain,
+  ScanCancellationOptions,
   ChainScannerAdapter,
   CustomChainInput,
   EvmChainInput,
@@ -48,6 +49,7 @@ export type {
   SolanaChainInput,
   CkbChainInput,
 } from './scanner/unified';
+export { getUnknownErrorMessage, isAbortError } from './chains/errorUtils';
 export {
   WraithError,
   WraithInputError,
@@ -64,8 +66,10 @@ export {
   ECDHFailedError,
   RPCRequestError,
   HorizonResponseError,
+  AgentResponseError,
   RPCRetryExhaustedError,
   RPCTimeoutError,
+  RPCAbortedError,
   RetentionExceededError,
   NameNotFoundError,
   NameAlreadyRegisteredError,
